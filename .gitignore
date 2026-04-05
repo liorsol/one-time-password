@@ -1,1 +1,10 @@
+node_modules/
+dist/
+cdk.out/
+cdk.context.json
+.env
+*.js
+*.d.ts
+*.js.map
+!jest.config.ts
 .superpowers/
