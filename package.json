@@ -33,6 +33,7 @@
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
+    "@types/google-apps-script": "^2.0.8",
     "@types/jest": "^30.0.0",
     "@types/node": "^25.5.2",
     "@types/uuid": "^10.0.0",

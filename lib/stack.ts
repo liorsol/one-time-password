@@ -17,7 +17,7 @@ export class OneTimeSecretStack extends cdk.Stack {
     });
 
     const fn = new NodejsFunction(this, "Handler", {
-      runtime: lambda.Runtime.NODEJS_20_X,
+      runtime: lambda.Runtime.NODEJS_22_X,
       handler: "handler",
       entry: path.join(__dirname, "..", "lambda", "index.ts"),
       environment: {

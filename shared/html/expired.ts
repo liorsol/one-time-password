@@ -1,38 +1,21 @@
 import { retroTheme } from "./themes/retro";
 import { tacticalTheme } from "./themes/tactical";
 import { modernTheme } from "./themes/modern";
+import { buildCombinedCss, buildThemeData, buildThemeOptions } from "./helpers";
 
 const themes = [retroTheme, tacticalTheme, modernTheme];
 
-function scopeThemeCss(css: string, themeName: string): string {
-  return css.replace(/\bbody\b/g, `body.theme-${themeName}`);
-}
+const expiredThemeFields = [
+  "headerBorder",
+  "footerBorder",
+  "expiredTitle",
+  "expiredMessage",
+] as const;
 
 export function renderExpired(): string {
-  const combinedCss = themes
-    .map((t) => scopeThemeCss(t.css, t.name))
-    .join("\n");
-
-  const themeData = JSON.stringify(
-    Object.fromEntries(
-      themes.map((t) => [
-        t.name,
-        {
-          headerBorder: t.headerBorder,
-          footerBorder: t.footerBorder,
-          expiredTitle: t.expiredTitle,
-          expiredMessage: t.expiredMessage,
-        },
-      ])
-    )
-  );
-
-  const themeOptions = themes
-    .map(
-      (t) =>
-        `<option value="${t.name}"${t.name === "retro" ? ' selected' : ""}>${t.label}</option>`
-    )
-    .join("\n        ");
+  const combinedCss = buildCombinedCss(themes);
+  const themeData = buildThemeData(themes, [...expiredThemeFields]);
+  const themeOptions = buildThemeOptions(themes);
 
   return `<!DOCTYPE html>
 <html lang="en">

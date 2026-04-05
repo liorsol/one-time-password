@@ -7,4 +7,6 @@ cdk.context.json
 *.d.ts
 *.js.map
 !jest.config.ts
+!gas/build.mjs
+!gas/dist/appsscript.json
 .superpowers/

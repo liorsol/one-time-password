@@ -1,4 +1,6 @@
-export const modernTheme = {
+import { Theme } from "../../types";
+
+export const modernTheme: Theme = {
   name: "modern",
   label: "Modern",
   css: `

@@ -1,8 +1,8 @@
 import { v4 as uuidv4 } from "uuid";
 import { encrypt, generatePassword } from "./crypto";
 import { putSecret, getSecret, markViewed } from "./db";
-import { renderViewer } from "./html/viewer";
-import { renderExpired } from "./html/expired";
+import { renderViewer } from "../shared/html/viewer";
+import { renderExpired } from "../shared/html/expired";
 
 interface LambdaEvent {
   requestContext: {

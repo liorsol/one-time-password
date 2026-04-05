@@ -1,60 +1,32 @@
 import { retroTheme } from "./themes/retro";
 import { tacticalTheme } from "./themes/tactical";
 import { modernTheme } from "./themes/modern";
+import { ViewerOptions } from "../types";
+import {
+  escapeAttr,
+  buildCombinedCss,
+  buildThemeData,
+  buildThemeOptions,
+} from "./helpers";
 
 const themes = [retroTheme, tacticalTheme, modernTheme];
 
-function escapeAttr(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/"/g, "&quot;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-}
-
-function scopeThemeCss(css: string, themeName: string): string {
-  // Replace `body` selector (not inside words) with `body.theme-<name>`
-  // Handles: body { ... }, body::before { ... }, body::after { ... }
-  return css.replace(/\bbody\b/g, `body.theme-${themeName}`);
-}
-
-export interface ViewerOptions {
-  encryptedText: string;
-  iv: string;
-  salt: string;
-  ttl: number;
-}
+const viewerThemeFields = [
+  "headerBorder",
+  "footerBorder",
+  "titleText",
+  "timerLabel",
+  "inputLabel",
+  "buttonText",
+  "destroyedText",
+  "expiredTitle",
+  "expiredMessage",
+] as const;
 
 export function renderViewer({ encryptedText, iv, salt, ttl }: ViewerOptions): string {
-  const combinedCss = themes
-    .map((t) => scopeThemeCss(t.css, t.name))
-    .join("\n");
-
-  const themeData = JSON.stringify(
-    Object.fromEntries(
-      themes.map((t) => [
-        t.name,
-        {
-          headerBorder: t.headerBorder,
-          footerBorder: t.footerBorder,
-          titleText: t.titleText,
-          timerLabel: t.timerLabel,
-          inputLabel: t.inputLabel,
-          buttonText: t.buttonText,
-          destroyedText: t.destroyedText,
-          expiredTitle: t.expiredTitle,
-          expiredMessage: t.expiredMessage,
-        },
-      ])
-    )
-  );
-
-  const themeOptions = themes
-    .map(
-      (t) =>
-        `<option value="${t.name}"${t.name === "retro" ? ' selected' : ""}>${t.label}</option>`
-    )
-    .join("\n        ");
+  const combinedCss = buildCombinedCss(themes);
+  const themeData = buildThemeData(themes, [...viewerThemeFields]);
+  const themeOptions = buildThemeOptions(themes);
 
   return `<!DOCTYPE html>
 <html lang="en">

@@ -22,9 +22,9 @@ describe("OneTimeSecretStack", () => {
     });
   });
 
-  it("creates a Lambda function with Node.js 20.x", () => {
+  it("creates a Lambda function with Node.js 22.x", () => {
     template.hasResourceProperties("AWS::Lambda::Function", {
-      Runtime: "nodejs20.x",
+      Runtime: "nodejs22.x",
       Handler: "index.handler",
     });
   });

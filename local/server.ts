@@ -1,7 +1,7 @@
 import express from "express";
 import { encrypt, generatePassword } from "../lambda/crypto";
-import { renderViewer } from "../lambda/html/viewer";
-import { renderExpired } from "../lambda/html/expired";
+import { renderViewer } from "../shared/html/viewer";
+import { renderExpired } from "../shared/html/expired";
 import { v4 as uuidv4 } from "uuid";
 
 interface StoredSecret {
@@ -75,10 +75,14 @@ app.get("/", (req, res) => {
   );
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`\nOne-Time Secret local server running at http://localhost:${PORT}\n`);
-  console.log("Usage:");
-  console.log(`  Create: curl -X POST http://localhost:${PORT}/ -H "Content-Type: application/json" -d '{"text":"my secret"}'`);
-  console.log(`  View:   Open the returned URL in your browser\n`);
-});
+export { app };
+
+if (require.main === module) {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+    console.log(`\nOne-Time Secret local server running at http://localhost:${PORT}\n`);
+    console.log("Usage:");
+    console.log(`  Create: curl -X POST http://localhost:${PORT}/ -H "Content-Type: application/json" -d '{"text":"my secret"}'`);
+    console.log(`  View:   Open the returned URL in your browser\n`);
+  });
+}

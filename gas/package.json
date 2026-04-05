@@ -1,0 +1,17 @@
+{
+  "name": "one-time-secret-gas",
+  "version": "1.0.0",
+  "description": "One-Time Secret sharing via Google Apps Script + Google Sheets",
+  "scripts": {
+    "build": "node build.mjs",
+    "push": "npm run build && clasp push",
+    "deploy": "npm run build && clasp deploy",
+    "open": "clasp open --webapp",
+    "logs": "clasp logs"
+  },
+  "devDependencies": {
+    "@google/clasp": "^3.0.0",
+    "@types/google-apps-script": "^1.0.0",
+    "esbuild": "^0.28.0"
+  }
+}

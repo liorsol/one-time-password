@@ -1,4 +1,6 @@
-export const tacticalTheme = {
+import { Theme } from "../../types";
+
+export const tacticalTheme: Theme = {
   name: "tactical",
   label: "Tactical",
   css: `
@@ -178,7 +180,7 @@ input[type="password"]:focus {
   outline: none;
 }
 `,
-  headerBorder: "⚠ CLASSIFIED",
+  headerBorder: "\u26A0 CLASSIFIED",
   footerBorder: "",
   titleText: "THIS MESSAGE WILL SELF-DESTRUCT",
   timerLabel: "UNTIL DESTRUCTION",

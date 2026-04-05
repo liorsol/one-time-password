@@ -1,4 +1,6 @@
-export const retroTheme = {
+import { Theme } from "../../types";
+
+export const retroTheme: Theme = {
   name: "retro",
   label: "Retro",
   css: `

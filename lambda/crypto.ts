@@ -1,13 +1,13 @@
 import crypto from "crypto";
-
-const ALGORITHM = "aes-256-gcm";
-const PBKDF2_ITERATIONS = 100_000;
-const KEY_LENGTH = 32;
-const IV_LENGTH = 12;
-const SALT_LENGTH = 16;
-const DIGEST = "sha256";
-
-const PASSWORD_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
+import {
+  ALGORITHM,
+  PBKDF2_ITERATIONS,
+  KEY_LENGTH,
+  IV_LENGTH,
+  SALT_LENGTH,
+  DIGEST,
+  PASSWORD_CHARS,
+} from "../shared/crypto-constants";
 
 export function generatePassword(): string {
   const length = crypto.randomInt(8, 15); // 8-14 inclusive
@@ -22,11 +22,8 @@ function deriveKey(password: string, salt: Buffer): Buffer {
   return crypto.pbkdf2Sync(password, salt, PBKDF2_ITERATIONS, KEY_LENGTH, DIGEST);
 }
 
-export interface EncryptResult {
-  encryptedText: string; // base64
-  iv: string;            // base64
-  salt: string;          // base64
-}
+import type { EncryptResult } from "../shared/types";
+export type { EncryptResult };
 
 export function encrypt(plaintext: string, password: string): EncryptResult {
   const salt = crypto.randomBytes(SALT_LENGTH);
