@@ -3,6 +3,7 @@ dist/
 cdk.out/
 cdk.context.json
 .env
+gas/.clasp.json
 *.js
 *.d.ts
 *.js.map
