@@ -69,6 +69,47 @@ ${combinedCss}
       opacity: 0.4;
       pointer-events: none;
     }
+    .copy-btn {
+      flex-shrink: 0;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s, opacity 0.15s;
+      color: inherit;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+    }
+    .copy-btn:hover {
+      background: rgba(255,255,255,0.15);
+    }
+    body.theme-retro .copy-btn {
+      background: rgba(0,255,0,0.08);
+      border-color: #1a8a1a;
+      color: #33ff33;
+    }
+    body.theme-retro .copy-btn:hover {
+      background: rgba(0,255,0,0.15);
+    }
+    body.theme-tactical .copy-btn {
+      background: rgba(255,68,68,0.08);
+      border-color: #ff4444;
+      color: #ff4444;
+    }
+    body.theme-tactical .copy-btn:hover {
+      background: rgba(255,68,68,0.15);
+    }
+    body.theme-modern .copy-btn {
+      background: rgba(99,102,241,0.12);
+      border-color: rgba(99,102,241,0.3);
+      color: #aaf;
+    }
+    body.theme-modern .copy-btn:hover {
+      background: rgba(99,102,241,0.2);
+    }
   </style>
 </head>
 <body class="theme-retro"
@@ -97,7 +138,12 @@ ${combinedCss}
     </div>
 
     <div class="error" id="errorMsg" style="display:none"></div>
-    <div class="decrypted-text" id="decryptedText" style="display:none"></div>
+    <div id="decryptedWrapper" style="display:none;display:none;align-items:center;gap:12px;">
+      <div class="decrypted-text" id="decryptedText" style="flex:1;"></div>
+      <button id="copyBtn" class="copy-btn" type="button" title="Copy to clipboard">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      </button>
+    </div>
     <div class="destroyed" id="destroyedMsg" style="display:none"></div>
 
     <div class="header-border" id="footerBorder"></div>
@@ -118,6 +164,8 @@ ${combinedCss}
       var passwordInput = document.getElementById('passwordInput');
       var errorMsg = document.getElementById('errorMsg');
       var decryptedText = document.getElementById('decryptedText');
+      var decryptedWrapper = document.getElementById('decryptedWrapper');
+      var copyBtn = document.getElementById('copyBtn');
       var destroyedMsg = document.getElementById('destroyedMsg');
       var inputSection = document.getElementById('inputSection');
       var themeSwitcher = document.getElementById('themeSwitcher');
@@ -129,7 +177,7 @@ ${combinedCss}
 
       var currentTheme = 'retro';
       var destroyed = false;
-      var endTime = Date.now() + ttlSeconds * 1000;
+      var endTime = ttlSeconds * 1000;
       var timerInterval = null;
 
       // --- Theme management ---
@@ -263,7 +311,7 @@ ${combinedCss}
 
           var plaintext = new TextDecoder().decode(plainBuffer);
           decryptedText.textContent = plaintext;
-          decryptedText.style.display = '';
+          decryptedWrapper.style.display = 'flex';
           inputSection.style.display = 'none';
           errorMsg.style.display = 'none';
         } catch (err) {
@@ -289,6 +337,15 @@ ${combinedCss}
 
       themeSwitcher.addEventListener('change', function() {
         applyTheme(themeSwitcher.value);
+      });
+
+      copyBtn.addEventListener('click', function() {
+        navigator.clipboard.writeText(decryptedText.textContent || '').then(function() {
+          copyBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+          setTimeout(function() {
+            copyBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+          }, 1500);
+        });
       });
 
       // --- Init ---
