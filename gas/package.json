@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "One-Time Secret sharing via Google Apps Script + Google Sheets",
   "scripts": {
+    "setup": "bash setup.sh",
     "build": "node build.mjs",
     "push": "npm run build && clasp push",
     "deploy": "npm run build && clasp deploy",

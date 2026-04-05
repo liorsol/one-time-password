@@ -1,8 +1,23 @@
 import { SecretRecord } from "../../shared/types";
 
+const HEADERS = ["pk", "encryptedText", "iv", "salt", "viewed", "createdAt", "ttl"];
+
+export function ensureSpreadsheet(): void {
+  const props = PropertiesService.getScriptProperties();
+  if (props.getProperty("SPREADSHEET_ID")) return;
+
+  const ss = SpreadsheetApp.create("One-Time Secret — Data");
+  let sheet = ss.getSheets()[0];
+  sheet.setName("Secrets");
+  sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
+  sheet.setFrozenRows(1);
+
+  props.setProperty("SPREADSHEET_ID", ss.getId());
+}
+
 function getSheet(): GoogleAppsScript.Spreadsheet.Sheet {
   const id = PropertiesService.getScriptProperties().getProperty("SPREADSHEET_ID");
-  if (!id) throw new Error("SPREADSHEET_ID not set in Script Properties");
+  if (!id) throw new Error("SPREADSHEET_ID not set — visit the app once to auto-create");
   const sheet = SpreadsheetApp.openById(id).getSheetByName("Secrets");
   if (!sheet) throw new Error('Sheet "Secrets" not found');
   return sheet;

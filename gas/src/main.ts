@@ -1,11 +1,12 @@
 import { renderViewer } from "../../shared/html/viewer";
 import { renderExpired } from "../../shared/html/expired";
 import { renderCreator } from "./html/creator";
-import { getSecret, putSecret, markViewed, cleanupExpired as dbCleanup } from "./db";
+import { getSecret, putSecret, markViewed, cleanupExpired as dbCleanup, ensureSpreadsheet } from "./db";
 
 export function doGet(
   e: GoogleAppsScript.Events.DoGet
 ): GoogleAppsScript.HTML.HtmlOutput {
+  ensureSpreadsheet();
   const key = e?.parameter?.key;
 
   if (key) {
