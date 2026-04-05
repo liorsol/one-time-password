@@ -8,8 +8,8 @@
     "push": "npm run build && clasp push --force",
     "deploy": "npm run build && clasp push --force && clasp deploy",
     "redeploy": "npm run build && clasp push --force && bash -c 'DEPLOY_ID=$(clasp deployments 2>/dev/null | grep -oE \"AKfycb[a-zA-Z0-9_-]+\" | tail -1) && clasp deploy --deploymentId \"$DEPLOY_ID\" --description \"Update\"'",
-    "open": "clasp open --webapp",
-    "logs": "clasp logs"
+    "open": "clasp open-web-app",
+    "logs": "clasp open-script && echo 'Go to Executions in the left sidebar to view logs'"
   },
   "devDependencies": {
     "@google/clasp": "^3.0.0",
