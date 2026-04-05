@@ -11,3 +11,4 @@ gas/.clasp.json
 !gas/build.mjs
 !gas/dist/appsscript.json
 .superpowers/
+CLAUDE.local.md
