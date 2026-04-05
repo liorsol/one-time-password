@@ -55,41 +55,25 @@ Removes all resources (Lambda, DynamoDB table, Function URL).
 
 Requires Node.js 22+, a Google account, and [clasp](https://github.com/google/clasp).
 
-### Setup
+### One-Command Setup
 
-1. Install clasp and log in:
-   ```bash
-   npm install -g @google/clasp
-   clasp login
-   ```
+```bash
+npm install -g @google/clasp
+clasp login                    # one-time: opens browser for Google auth
+cd gas && npm run setup
+```
 
-2. Create a Google Sheet for storing secrets. Add a sheet named **"Secrets"** with headers in row 1:
-   ```
-   pk | encryptedText | iv | salt | viewed | createdAt | ttl
-   ```
-   Note the spreadsheet ID from the URL (`https://docs.google.com/spreadsheets/d/<SPREADSHEET_ID>/...`).
+This single command will:
+1. Create a new Apps Script project
+2. Build and push the code
+3. Deploy as a web app
+4. Print the web app URL
 
-3. Create a new Apps Script project:
-   ```bash
-   clasp create --type webapp --title "One-Time Secret"
-   ```
-   Copy the script ID into `gas/.clasp.json`.
+On first visit, the app automatically creates a Google Sheet for storing secrets — no manual spreadsheet setup needed.
 
-4. Install GAS dependencies and build:
-   ```bash
-   cd gas
-   npm install
-   npm run push
-   ```
+**Prerequisites:** Enable the Apps Script API at https://script.google.com/home/usersettings before first run.
 
-5. Open the Apps Script editor and set `SPREADSHEET_ID` in Script Properties:
-   - File → Project Settings → Script Properties → Add `SPREADSHEET_ID` = your spreadsheet ID
-
-6. Deploy as a web app:
-   - Deploy → New Deployment → Web App → Execute as: Me, Access: Anyone → Deploy
-
-7. (Optional) Set up hourly cleanup of expired secrets:
-   - In the Apps Script editor, go to Triggers → Add Trigger → `cleanupExpired` → Time-driven → Hours timer → Every hour
+An hourly cleanup trigger for expired secrets is also created automatically on first visit.
 
 ### GAS Commands
 

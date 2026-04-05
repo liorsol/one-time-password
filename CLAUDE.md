@@ -15,6 +15,7 @@ npx cdk deploy        # Deploy (needs AWS credentials)
 npx cdk destroy       # Tear down all resources
 
 # Google Apps Script
+cd gas && npm run setup   # Full setup: create project + build + push + deploy
 cd gas && npm run build   # Bundle GAS code via esbuild → gas/dist/Code.js
 cd gas && npm run push    # Build + clasp push to GAS project
 cd gas && npm run deploy  # Build + clasp deploy as web app
@@ -33,7 +34,7 @@ Single Lambda Function URL + DynamoDB table. No API Gateway, no VPC.
 
 ### Google Apps Script
 
-Web app using Google Sheets as database. Encryption happens client-side (browser Web Crypto API) — the server never sees plaintext or passwords.
+Web app using Google Sheets as database. Encryption happens client-side (browser Web Crypto API) — the server never sees plaintext or passwords. On first visit, the app auto-creates the Google Sheet and sets `SPREADSHEET_ID` in Script Properties — no manual setup needed. Full deployment via `cd gas && npm run setup`.
 
 - **GET /** (no key) — Returns creation page. Browser encrypts text, calls `google.script.run.createSecret()` to store encrypted blob in Sheets, displays URL + password.
 - **GET /?key=<id>** — Same viewer page as Lambda version. Browser decrypts with password.
@@ -61,6 +62,7 @@ gas/                             # Google Apps Script specific
     db.ts                        # Google Sheets CRUD operations
     html/
       creator.ts                 # Creation page with client-side Web Crypto encryption
+  setup.sh                       # One-command setup: create project + build + push + deploy
   build.mjs                      # esbuild bundler → gas/dist/Code.js
   dist/
     appsscript.json              # GAS manifest

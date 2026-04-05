@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-cd "$(dirname "$0")"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+cd "$SCRIPT_DIR"
 
 echo "=== One-Time Secret — Google Apps Script Setup ==="
 echo ""
@@ -25,10 +27,24 @@ npm install --silent
 if [ ! -f .clasp.json ] || grep -q '<YOUR_SCRIPT_ID>' .clasp.json 2>/dev/null; then
   echo "Creating new Apps Script web app project..."
   rm -f .clasp.json
-  clasp create --type webapp --title "One-Time Secret"
-  # clasp create puts .clasp.json in cwd but rootDir defaults to "."
-  # We need rootDir to be "dist"
-  SCRIPT_ID=$(node -e "console.log(JSON.parse(require('fs').readFileSync('.clasp.json','utf8')).scriptId)")
+
+  # Create in a temp directory to avoid conflicts with any .clasp.json
+  # files in parent directories. Copy appsscript.json so clasp recognizes
+  # the project type.
+  TMPDIR=$(mktemp -d)
+  cp dist/appsscript.json "$TMPDIR/appsscript.json"
+  (cd "$TMPDIR" && clasp create --type standalone --title "One-Time Secret")
+
+  if [ ! -f "$TMPDIR/.clasp.json" ]; then
+    echo "Error: clasp create failed to produce .clasp.json"
+    rm -rf "$TMPDIR"
+    exit 1
+  fi
+
+  SCRIPT_ID=$(node -e "console.log(JSON.parse(require('fs').readFileSync('$TMPDIR/.clasp.json','utf8')).scriptId)")
+  rm -rf "$TMPDIR"
+
+  # Write .clasp.json with rootDir pointing to dist/
   echo "{\"scriptId\":\"${SCRIPT_ID}\",\"rootDir\":\"dist\"}" > .clasp.json
   echo "Created project with script ID: ${SCRIPT_ID}"
 else
@@ -38,7 +54,7 @@ fi
 
 # 4. Build and push
 echo "Building..."
-cd .. && node gas/build.mjs && cd gas
+(cd "$PROJECT_ROOT" && node gas/build.mjs)
 echo "Pushing to Apps Script..."
 clasp push --force
 
@@ -55,9 +71,6 @@ echo ""
 echo "Web app URL:"
 echo "  https://script.google.com/macros/s/${DEPLOY_ID}/exec"
 echo ""
-echo "On first visit, the app will automatically create a Google Sheet"
-echo "for storing encrypted secrets."
-echo ""
-echo "Optional: set up hourly cleanup by running:"
-echo "  clasp open"
-echo "  Then: Triggers → Add → cleanupExpired → Time-driven → Hours → Every hour"
+echo "On first visit, the app will automatically:"
+echo "  - Create a Google Sheet for storing encrypted secrets"
+echo "  - Set up an hourly cleanup trigger for expired secrets"

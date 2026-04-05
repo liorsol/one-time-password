@@ -49,10 +49,18 @@ mockSheet.getDataRange.mockReturnValue({
   XFrameOptionsMode: { ALLOWALL: "ALLOWALL" },
 };
 
+const mockTriggerBuilder = {
+  timeBased: jest.fn().mockReturnThis(),
+  everyHours: jest.fn().mockReturnThis(),
+  create: jest.fn(),
+};
+
 (global as any).ScriptApp = {
   getService: jest.fn(() => ({
     getUrl: jest.fn(() => "https://script.google.com/macros/s/test/exec"),
   })),
+  getProjectTriggers: jest.fn(() => []),
+  newTrigger: jest.fn(() => mockTriggerBuilder),
 };
 
 (global as any).Utilities = {

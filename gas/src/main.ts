@@ -7,6 +7,7 @@ export function doGet(
   e: GoogleAppsScript.Events.DoGet
 ): GoogleAppsScript.HTML.HtmlOutput {
   ensureSpreadsheet();
+  ensureCleanupTrigger();
   const key = e?.parameter?.key;
 
   if (key) {
@@ -57,6 +58,19 @@ export function createSecret(payload: {
 
 export function cleanupExpired(): void {
   dbCleanup();
+}
+
+export function ensureCleanupTrigger(): void {
+  const triggers = ScriptApp.getProjectTriggers();
+  const hasCleanup = triggers.some(
+    (t) => t.getHandlerFunction() === "cleanupExpired"
+  );
+  if (hasCleanup) return;
+
+  ScriptApp.newTrigger("cleanupExpired")
+    .timeBased()
+    .everyHours(1)
+    .create();
 }
 
 function html(content: string): GoogleAppsScript.HTML.HtmlOutput {

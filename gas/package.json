@@ -5,8 +5,9 @@
   "scripts": {
     "setup": "bash setup.sh",
     "build": "node build.mjs",
-    "push": "npm run build && clasp push",
-    "deploy": "npm run build && clasp deploy",
+    "push": "npm run build && clasp push --force",
+    "deploy": "npm run build && clasp push --force && clasp deploy",
+    "redeploy": "npm run build && clasp push --force && bash -c 'DEPLOY_ID=$(clasp deployments 2>/dev/null | grep -oE \"AKfycb[a-zA-Z0-9_-]+\" | tail -1) && clasp deploy --deploymentId \"$DEPLOY_ID\" --description \"Update\"'",
     "open": "clasp open --webapp",
     "logs": "clasp logs"
   },
