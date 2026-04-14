@@ -88,3 +88,39 @@ test("missing key returns expired page", async () => {
   const html = await res.text();
   expect(html.toLowerCase()).toContain("expired");
 });
+
+test("GET / with no key returns creator page", async () => {
+  const res = await fetch(baseUrl + "/");
+
+  expect(res.status).toBe(200);
+  const html = await res.text();
+  expect(html).toContain("<textarea");
+  expect(html).toContain("Create Secret Link");
+});
+
+test("POST pre-encrypted payload returns url without password", async () => {
+  const res = await fetch(baseUrl + "/", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      encryptedText: "dGVzdA==",
+      iv: "dGVzdGl2",
+      salt: "dGVzdHNhbHQ=",
+    }),
+  });
+
+  expect(res.status).toBe(200);
+  const body = (await res.json()) as { url: string; password?: string };
+  expect(body).toHaveProperty("url");
+  expect(body.password).toBeUndefined();
+});
+
+test("POST pre-encrypted payload missing iv returns 400", async () => {
+  const res = await fetch(baseUrl + "/", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ encryptedText: "abc" }),
+  });
+
+  expect(res.status).toBe(400);
+});

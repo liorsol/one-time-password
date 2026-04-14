@@ -5,9 +5,11 @@ One-time secret sharing via self-destructing links. AES-256-GCM encryption with 
 ## Commands
 
 ```bash
-npm test              # Run all tests (Jest) — shared, lambda, gas, sanity
-npm run local         # Start local Express server on :3000
-npm run build         # TypeScript compile
+npm test                    # Run unit + sanity tests (Jest) — excludes integration
+npm run test:integration    # Run remote integration tests (requires TARGET_URL)
+npm run test:all            # Run all tests including integration
+npm run local               # Start local Express server on :3000
+npm run build               # TypeScript compile
 
 # AWS Lambda deployment
 npx cdk synth         # Synthesize CloudFormation template
@@ -80,8 +82,9 @@ test/                            # Jest tests
   crypto.test.ts                 # Lambda crypto tests
   handler.test.ts                # Lambda handler tests
   stack.test.ts                  # CDK stack tests
-  sanity.test.ts                 # Integration test (local server create→view→decrypt)
-  shared/                        # Shared code tests (helpers, viewer, expired, constants)
+  sanity.test.ts                 # Local server integration test (create→view→decrypt)
+  integration.test.ts            # Remote integration test (requires TARGET_URL env var)
+  shared/                        # Shared code tests (helpers, viewer, expired, constants, creator)
   gas/                           # GAS code tests (db, main, creator) with mocked GAS globals
 ```
 
@@ -94,6 +97,7 @@ test/                            # Jest tests
 - **Handler tests**: Mock `lambda/db` module, real crypto. Use `jest.clearAllMocks()` in beforeEach.
 - **GAS tests**: Mock GAS globals (`SpreadsheetApp`, `HtmlService`, etc.) in `test/gas/setup.ts`.
 - **CDK tests**: Use `Template.fromStack` assertions. `Match.anyValue()` for CDK-generated refs (not Jest's `expect.anything()`).
+- **Integration tests**: `test/integration.test.ts` runs against a deployed endpoint. Pass `TARGET_URL` env var (e.g. `TARGET_URL=https://<function-url> npm run test:integration`). Skipped automatically when `TARGET_URL` is not set. Covers creator page, both POST paths, validation errors, and viewer.
 - **GAS build**: clasp 3.x dropped built-in TypeScript support. We use esbuild to bundle `gas/src/` + `shared/` into a single JS file, then expose GAS entry points (`doGet`, `createSecret`, `cleanupExpired`) as global functions.
 
 ## Development Rules
