@@ -29,7 +29,9 @@ Deploy/destroy use `AWS_PROFILE=playground` for the playground account.
 
 Single Lambda Function URL + DynamoDB table. No API Gateway, no VPC.
 
-- **POST /** — Generates random password (8-14 chars), encrypts text server-side with AES-256-GCM (PBKDF2 key derivation, 100k iterations, SHA-256), stores ciphertext in DynamoDB (2-day TTL), returns `{ url, password }`
+- **GET /** (no key) — Returns creator page. Browser encrypts text client-side (Web Crypto API), calls POST to store encrypted blob, displays URL + password.
+- **POST /** with `{text}` — API usage: encrypts server-side with AES-256-GCM (PBKDF2, 100k iterations, SHA-256), stores in DynamoDB (2-day TTL), returns `{ url, password }`
+- **POST /** with `{encryptedText, iv, salt}` — Stores pre-encrypted payload from creator page, returns `{ url }`
 - **GET /?key=<id>** — Looks up secret, returns HTML page with encrypted payload as data attributes. First view sets `viewed=true` and shortens TTL to 5 minutes.
 
 ### Google Apps Script
@@ -47,6 +49,7 @@ shared/                          # Platform-independent code (used by both Lambd
   types.ts                       # Theme, ViewerOptions, EncryptResult, SecretRecord interfaces
   html/
     helpers.ts                   # escapeAttr, scopeThemeCss, buildCombinedCss, buildThemeData, buildThemeOptions
+    creator.ts                   # Shared creator page with client-side encryption (parameterized submit handler)
     viewer.ts                    # Viewer HTML page with decrypt JS + themes
     expired.ts                   # Expired/not-found page
     themes/                      # retro.ts (default), tactical.ts, modern.ts
@@ -61,7 +64,7 @@ gas/                             # Google Apps Script specific
     main.ts                      # doGet() entry point + createSecret() server function
     db.ts                        # Google Sheets CRUD operations
     html/
-      creator.ts                 # Creation page with client-side Web Crypto encryption
+      creator.ts                 # GAS wrapper — calls shared renderCreator with google.script.run submit handler
   setup.sh                       # One-command setup: create project + build + push + deploy
   build.mjs                      # esbuild bundler → gas/dist/Code.js
   dist/
@@ -84,6 +87,7 @@ test/                            # Jest tests
 
 ## Key Patterns
 
+- **Creator page**: Shared creator page (`shared/html/creator.ts`) with client-side Web Crypto encryption, parameterized via `submitHandler` string. GAS wrapper uses `google.script.run`, Lambda/local use `fetch` POST. Both store pre-encrypted `{encryptedText, iv, salt}`.
 - **Encryption format**: ciphertext + 16-byte GCM auth tag concatenated, then base64 encoded. This format is consumed directly by both Node.js `crypto` (server) and Web Crypto API (browser).
 - **TTL logic**: DynamoDB TTL deletes are eventually consistent (up to 48h lag). The Lambda checks `ttl < now` at read time and treats expired items as not found. GAS version checks TTL at read time and has a `cleanupExpired()` function for periodic cleanup.
 - **Theme system**: Three themes (retro/tactical/modern) with CSS scoped via `body.theme-<name>`. Theme preference stored in `localStorage`. Retro is the default. Themes are defined in `shared/html/themes/` and used by both Lambda and GAS.

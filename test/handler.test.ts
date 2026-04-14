@@ -62,6 +62,41 @@ describe("POST /", () => {
     const result = await handler(event);
     expect(result.statusCode).toBe(400);
   });
+
+  it("stores pre-encrypted payload and returns url without password", async () => {
+    mockedDb.putSecret.mockResolvedValue(undefined);
+    const event = makeEvent({
+      method: "POST",
+      body: JSON.stringify({
+        encryptedText: "encrypted-base64",
+        iv: "iv-base64",
+        salt: "salt-base64",
+      }),
+    });
+
+    const result = await handler(event);
+    const body = JSON.parse(result.body);
+
+    expect(result.statusCode).toBe(200);
+    expect(body.url).toContain("?key=");
+    expect(body.password).toBeUndefined();
+    expect(mockedDb.putSecret).toHaveBeenCalledTimes(1);
+
+    const storedRecord = mockedDb.putSecret.mock.calls[0][0];
+    expect(storedRecord.encryptedText).toBe("encrypted-base64");
+    expect(storedRecord.iv).toBe("iv-base64");
+    expect(storedRecord.salt).toBe("salt-base64");
+    expect(storedRecord.viewed).toBe(false);
+  });
+
+  it("returns 400 for pre-encrypted payload missing iv or salt", async () => {
+    const event = makeEvent({
+      method: "POST",
+      body: JSON.stringify({ encryptedText: "abc" }),
+    });
+    const result = await handler(event);
+    expect(result.statusCode).toBe(400);
+  });
 });
 
 describe("GET /?key=...", () => {
@@ -117,10 +152,12 @@ describe("GET /?key=...", () => {
     expect(result.body).toContain("expired");
   });
 
-  it("returns expired page when no key param", async () => {
+  it("returns creator page when no key param", async () => {
     const event = makeEvent({ method: "GET", query: {} });
     const result = await handler(event);
     expect(result.statusCode).toBe(200);
-    expect(result.body).toContain("expired");
+    expect(result.headers["content-type"]).toBe("text/html");
+    expect(result.body).toContain("<textarea");
+    expect(result.body).toContain("Create Secret Link");
   });
 });

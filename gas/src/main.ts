@@ -1,6 +1,6 @@
 import { renderViewer } from "../../shared/html/viewer";
 import { renderExpired } from "../../shared/html/expired";
-import { renderCreator } from "./html/creator";
+import { renderGasCreator } from "./html/creator";
 import { getSecret, putSecret, markViewed, cleanupExpired as dbCleanup, ensureSpreadsheet } from "./db";
 
 export function doGet(
@@ -31,7 +31,7 @@ export function doGet(
     );
   }
 
-  return html(renderCreator());
+  return html(renderGasCreator());
 }
 
 export function createSecret(payload: {
