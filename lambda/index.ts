@@ -30,15 +30,20 @@ export async function handler(event: LambdaEvent): Promise<LambdaResponse> {
 }
 
 async function handlePost(event: LambdaEvent): Promise<LambdaResponse> {
+  if (!event.body) {
+    return jsonResponse(400, { error: "text is required" });
+  }
+
+  let body: any;
   try {
-    if (!event.body) {
-      return jsonResponse(400, { error: "text is required" });
-    }
+    body = JSON.parse(event.body);
+  } catch {
+    return jsonResponse(400, { error: "Invalid JSON in request body" });
+  }
 
-    const body = JSON.parse(event.body);
-
+  try {
     if (body.encryptedText) {
-      return handleStoreEncrypted(event, body);
+      return await handleStoreEncrypted(event, body);
     }
 
     if (!body.text) {
@@ -76,7 +81,7 @@ async function handleStoreEncrypted(
   body: { encryptedText: string; iv: string; salt: string }
 ): Promise<LambdaResponse> {
   const { encryptedText, iv, salt } = body;
-  if (!iv || !salt) {
+  if (typeof encryptedText !== "string" || !encryptedText || !iv || !salt) {
     return jsonResponse(400, { error: "encryptedText, iv, and salt are required" });
   }
 
@@ -140,7 +145,7 @@ async function handleGet(event: LambdaEvent): Promise<LambdaResponse> {
     );
   } catch (err) {
     console.error("GET error:", err);
-    return jsonResponse(500, { error: "Internal server error" });
+    return htmlResponse("<html><body><h1>Something went wrong</h1><p>Please try again later.</p></body></html>");
   }
 }
 

@@ -97,6 +97,34 @@ describe("POST /", () => {
     const result = await handler(event);
     expect(result.statusCode).toBe(400);
   });
+
+  it("returns 400 for pre-encrypted payload missing only salt", async () => {
+    const event = makeEvent({
+      method: "POST",
+      body: JSON.stringify({ encryptedText: "abc", iv: "def" }),
+    });
+    const result = await handler(event);
+    expect(result.statusCode).toBe(400);
+  });
+
+  it("returns 400 for pre-encrypted payload with non-string encryptedText", async () => {
+    const event = makeEvent({
+      method: "POST",
+      body: JSON.stringify({ encryptedText: 123, iv: "iv", salt: "salt" }),
+    });
+    const result = await handler(event);
+    expect(result.statusCode).toBe(400);
+  });
+
+  it("returns 400 for invalid JSON body", async () => {
+    const event = makeEvent({
+      method: "POST",
+      body: "not json",
+    });
+    const result = await handler(event);
+    expect(result.statusCode).toBe(400);
+    expect(JSON.parse(result.body).error).toContain("Invalid JSON");
+  });
 });
 
 describe("GET /?key=...", () => {
