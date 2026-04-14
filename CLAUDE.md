@@ -97,6 +97,7 @@ test/                            # Jest tests
 - For every code change, existing unit tests must pass (`npm test`)
 - New functionality must have corresponding unit tests
 - Shared code changes affect both Lambda and GAS — test both paths
+- Documentation (CLAUDE.md, code comments) must be updated when functionality is added or changed
 
 ## Gotchas
 
