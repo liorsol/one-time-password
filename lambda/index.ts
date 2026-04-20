@@ -3,6 +3,7 @@ import { encrypt, generatePassword } from "./crypto";
 import { putSecret, getSecret, markViewed } from "./db";
 import { renderViewer } from "../shared/html/viewer";
 import { renderExpired } from "../shared/html/expired";
+import { renderCreator } from "../shared/html/creator";
 
 interface LambdaEvent {
   requestContext: {
@@ -29,19 +30,29 @@ export async function handler(event: LambdaEvent): Promise<LambdaResponse> {
 }
 
 async function handlePost(event: LambdaEvent): Promise<LambdaResponse> {
+  if (!event.body) {
+    return jsonResponse(400, { error: "text is required" });
+  }
+
+  let body: any;
   try {
-    if (!event.body) {
-      return jsonResponse(400, { error: "text is required" });
+    body = JSON.parse(event.body);
+  } catch {
+    return jsonResponse(400, { error: "Invalid JSON in request body" });
+  }
+
+  try {
+    if (body.encryptedText) {
+      return await handleStoreEncrypted(event, body);
     }
 
-    const { text } = JSON.parse(event.body);
-    if (!text) {
+    if (!body.text) {
       return jsonResponse(400, { error: "text is required" });
     }
 
     const password = generatePassword();
     const pk = uuidv4();
-    const { encryptedText, iv, salt } = encrypt(text, password);
+    const { encryptedText, iv, salt } = encrypt(body.text, password);
     const now = Math.floor(Date.now() / 1000);
 
     await putSecret({
@@ -65,11 +76,51 @@ async function handlePost(event: LambdaEvent): Promise<LambdaResponse> {
   }
 }
 
+async function handleStoreEncrypted(
+  event: LambdaEvent,
+  body: { encryptedText: string; iv: string; salt: string }
+): Promise<LambdaResponse> {
+  const { encryptedText, iv, salt } = body;
+  if (typeof encryptedText !== "string" || !encryptedText || !iv || !salt) {
+    return jsonResponse(400, { error: "encryptedText, iv, and salt are required" });
+  }
+
+  const pk = uuidv4();
+  const now = Math.floor(Date.now() / 1000);
+
+  await putSecret({
+    pk,
+    encryptedText,
+    iv,
+    salt,
+    viewed: false,
+    createdAt: now,
+    ttl: now + 172800, // 2 days
+  });
+
+  const host = event.headers["host"] || event.headers["Host"] || "localhost";
+  const proto = event.headers["x-forwarded-proto"] || "https";
+  const url = `${proto}://${host}/?key=${pk}`;
+
+  return jsonResponse(200, { url });
+}
+
 async function handleGet(event: LambdaEvent): Promise<LambdaResponse> {
   try {
     const key = event.queryStringParameters?.key;
     if (!key) {
-      return htmlResponse(renderExpired());
+      return htmlResponse(renderCreator({
+        submitHandler: `
+          fetch('/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ encryptedText: encrypted.encryptedText, iv: encrypted.iv, salt: encrypted.salt })
+          })
+          .then(function(r) { return r.json(); })
+          .then(function(data) { if (data.error) onFailure(data.error); else onSuccess(data); })
+          .catch(function(err) { onFailure(err.message || err); });
+        `,
+      }));
     }
 
     const record = await getSecret(key);
@@ -94,7 +145,7 @@ async function handleGet(event: LambdaEvent): Promise<LambdaResponse> {
     );
   } catch (err) {
     console.error("GET error:", err);
-    return jsonResponse(500, { error: "Internal server error" });
+    return htmlResponse("<html><body><h1>Something went wrong</h1><p>Please try again later.</p></body></html>");
   }
 }
 

@@ -1,10 +1,11 @@
-import { renderGasCreator } from "../../gas/src/html/creator";
+import { renderCreator } from "../../shared/html/creator";
 
-describe("renderGasCreator", () => {
+describe("renderCreator", () => {
+  const submitHandler = 'testSubmitHandler(encrypted, password);';
   let html: string;
 
   beforeAll(() => {
-    html = renderGasCreator();
+    html = renderCreator({ submitHandler });
   });
 
   it("returns HTML containing a textarea element", () => {
@@ -28,7 +29,16 @@ describe("renderGasCreator", () => {
     expect(html).toContain("crypto.subtle.encrypt");
   });
 
-  it("includes google.script.run call", () => {
-    expect(html).toContain("google.script.run");
+  it("injects the provided submitHandler", () => {
+    expect(html).toContain("testSubmitHandler(encrypted, password)");
+  });
+
+  it("does not contain google.script.run", () => {
+    expect(html).not.toContain("google.script.run");
+  });
+
+  it("includes all three theme options", () => {
+    const optionMatches = html.match(/<option/g);
+    expect(optionMatches).toHaveLength(3);
   });
 });

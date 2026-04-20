@@ -8,7 +8,9 @@
   },
   "scripts": {
     "build": "tsc",
-    "test": "jest",
+    "test": "jest --testPathIgnorePatterns=integration",
+    "test:integration": "jest test/integration",
+    "test:all": "jest",
     "cdk": "cdk",
     "local": "ts-node local/server.ts"
   },

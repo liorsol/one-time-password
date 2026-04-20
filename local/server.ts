@@ -2,6 +2,7 @@ import express from "express";
 import { encrypt, generatePassword } from "../lambda/crypto";
 import { renderViewer } from "../shared/html/viewer";
 import { renderExpired } from "../shared/html/expired";
+import { renderCreator } from "../shared/html/creator";
 import { v4 as uuidv4 } from "uuid";
 
 interface StoredSecret {
@@ -20,7 +21,31 @@ const app = express();
 app.use(express.json());
 
 app.post("/", (req, res) => {
-  const { text } = req.body || {};
+  const body = req.body || {};
+
+  // Pre-encrypted payload from creator page
+  if (body.encryptedText) {
+    const { encryptedText, iv, salt } = body;
+    if (!iv || !salt) {
+      res.status(400).json({ error: "encryptedText, iv, and salt are required" });
+      return;
+    }
+
+    const pk = uuidv4();
+    const now = Math.floor(Date.now() / 1000);
+    const ttl = now + 172800;
+
+    secrets.set(pk, { pk, encryptedText, iv, salt, viewed: false, createdAt: now, ttl });
+    setTimeout(() => secrets.delete(pk), 172800 * 1000);
+
+    const url = `http://localhost:3000/?key=${pk}`;
+    console.log(`\nSecret created (client-encrypted)!\n  URL: ${url}\n`);
+    res.json({ url });
+    return;
+  }
+
+  // Server-side encryption (API usage)
+  const { text } = body;
   if (!text) {
     res.status(400).json({ error: "text is required" });
     return;
@@ -33,8 +58,6 @@ app.post("/", (req, res) => {
   const ttl = now + 172800;
 
   secrets.set(pk, { pk, encryptedText, iv, salt, viewed: false, createdAt: now, ttl });
-
-  // Auto-delete after TTL
   setTimeout(() => secrets.delete(pk), 172800 * 1000);
 
   const url = `http://localhost:3000/?key=${pk}`;
@@ -45,7 +68,18 @@ app.post("/", (req, res) => {
 app.get("/", (req, res) => {
   const key = req.query.key as string;
   if (!key) {
-    res.send(renderExpired());
+    res.send(renderCreator({
+      submitHandler: `
+        fetch('/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ encryptedText: encrypted.encryptedText, iv: encrypted.iv, salt: encrypted.salt })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) { if (data.error) onFailure(data.error); else onSuccess(data); })
+        .catch(function(err) { onFailure(err.message || err); });
+      `,
+    }));
     return;
   }
 
